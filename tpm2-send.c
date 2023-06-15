@@ -43,7 +43,7 @@ end_print_usage:
     return -1;
 }
 
-int input_init(BYTE **tx_buf, UINT32 *tx_buf_len, char *file_in_path) {
+int input_init(BYTE *tx_buf, size_t tx_buf_max_len, UINT32 *tx_buf_len, char *file_in_path) {
     int result;
     FILE *file_in;
 
@@ -57,41 +57,20 @@ int input_init(BYTE **tx_buf, UINT32 *tx_buf_len, char *file_in_path) {
         }
     }
 
-    result = fseek(file_in, 0, SEEK_END);
-    if (result != 0) {
-        fprintf(stderr, "Failed when calling fseek() on input file\n");
-        goto cleanup_file;
-    }
-    *tx_buf_len = ftell(file_in);
-    if (*tx_buf_len == -1L) {
-        perror("Failed when calling ftell() on input file");
-        result = -1;
-        goto cleanup_file;
-    }
-    rewind(file_in);
-
-    *tx_buf = (BYTE *) malloc(*tx_buf_len * sizeof(BYTE));
-    if (*tx_buf == NULL) {
-        fprintf(stderr, "Error: out of memory\n");
-        result = -1;
-        goto cleanup_file;
-    }
-    fread(*tx_buf, *tx_buf_len, 1, file_in);
+    *tx_buf_len = fread(tx_buf, 1, tx_buf_max_len, file_in);
     if (ferror(file_in)) {
         perror("Error reading from input file");
-        free(*tx_buf);
+        result = -1;
         goto cleanup_file;
     }
+
+    result = 0;
 
 cleanup_file:
     if (file_in != stdin) {
         fclose(file_in);
     }
     return result;
-}
-
-void input_cleanup(BYTE *tx_buf) {
-    free(tx_buf);
 }
 
 int output_init(FILE **file_out, char *file_out_path) {
@@ -156,7 +135,7 @@ int main(int argc, char **argv) {
     char *file_out_path = PATH_DEFAULT;
     FILE *file_out = stdout;
 
-    BYTE *tx_buf;
+    BYTE tx_buf[4096] = {0};
     UINT32 tx_buf_len;
     BYTE rx_buf[4096] = {0};
     UINT32 rx_buf_len = sizeof(rx_buf);
@@ -166,14 +145,14 @@ int main(int argc, char **argv) {
         goto end;
     }
 
-    result = input_init(&tx_buf, &tx_buf_len, file_in_path);
+    result = input_init(tx_buf, sizeof(tx_buf), &tx_buf_len, file_in_path);
     if (result != 0) {
         goto end;
     }
 
     result = output_init(&file_out, file_out_path);
     if (result != 0) {
-        goto cleanup_input;
+        goto end;
     }
 
     result = transceive(tx_buf, tx_buf_len, rx_buf, &rx_buf_len);
@@ -183,8 +162,6 @@ int main(int argc, char **argv) {
 
     fwrite(rx_buf, sizeof(BYTE), rx_buf_len, file_out);
 
-cleanup_input:
-    input_cleanup(tx_buf);
 cleanup_output:
     output_cleanup(file_out);
 end:
