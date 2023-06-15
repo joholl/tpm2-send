@@ -2,6 +2,9 @@
 
 tpm2-send is a no-dependency utility for sending raw bytes to the TPM.
 
+Want to access the TPM 2.0 from within WSL2? Just compile tpm2-send.exe and then call it from your WSL2 shell.
+
+
 # Usage
 
 tpm2-send takes an input stream (by default `stdin`) and an output stream (by default `stdout`).
@@ -37,3 +40,7 @@ REM setup environment
 REM compile
 cl /W4 /link tpm2-send.c tbs.lib
 ```
+
+## Linux
+
+Linux is not supported, yet. Patches welcome!
