@@ -1,0 +1,16 @@
+name: Main
+
+on: [push]
+
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build tpm2-send-tbs for win_x86
+        run: cl /W4 tpm2-send-tbs.c /link tbs.lib
+      - name: Archive tpm2-send-tbs.exe
+        uses: actions/upload-artifact@v3
+        with:
+          name: tpm2-send-tbs.exe
+          path: ./tpm2-send-tbs.exe
