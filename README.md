@@ -1,3 +1,6 @@
+> [!WARNING]
+> This project was superseded by [tpm2-software/tpm2-send-tbs](https://github.com/tpm2-software/tpm2-send-tbs).
+
 # tpm2-send-tbs
 
 tpm2-send-tbs is a no-dependency utility for sending raw bytes to the TPM.
